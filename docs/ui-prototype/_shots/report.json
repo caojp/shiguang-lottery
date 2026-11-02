@@ -1,0 +1,131 @@
+{
+  "src": "D:\\Projects\\PycharmProjects\\shiguang-lottery\\docs\\ui-prototype\\时光选彩小程序UI原型.html",
+  "url": "file:///D:/Projects/PycharmProjects/shiguang-lottery/docs/ui-prototype/%E6%97%B6%E5%85%89%E9%80%89%E5%BD%A9%E5%B0%8F%E7%A8%8B%E5%BA%8FUI%E5%8E%9F%E5%9E%8B.html",
+  "outdir": "D:\\Projects\\PycharmProjects\\shiguang-lottery\\docs\\ui-prototype\\_shots",
+  "include": [
+    "lint",
+    "screenshots",
+    "structure"
+  ],
+  "shots": {
+    "desktop": {
+      "screenshot": "D:\\Projects\\PycharmProjects\\shiguang-lottery\\docs\\ui-prototype\\_shots\\时光选彩小程序UI原型_desktop.jpg",
+      "screenshotBytes": 34299,
+      "truncated": false,
+      "structure": {
+        "title": "时光选彩 · 小程序 UI 高保真原型",
+        "firstH1": "彩时光选彩",
+        "viewport": {
+          "w": 1418,
+          "h": 746
+        },
+        "fullpage": {
+          "w": 1418,
+          "h": 795
+        },
+        "counts": {
+          "section": 5,
+          "h1": 5,
+          "h2": 1,
+          "img": 0,
+          "canvas": 0,
+          "svg": 6,
+          "links": 0,
+          "buttons": 15
+        }
+      },
+      "consoleErrors": [],
+      "consoleWarnings": [],
+      "horizontalOverflow": [],
+      "resourceErrors": [],
+      "reportSource": "cdp"
+    },
+    "mobile": {
+      "screenshot": "D:\\Projects\\PycharmProjects\\shiguang-lottery\\docs\\ui-prototype\\_shots\\时光选彩小程序UI原型_mobile.jpg",
+      "screenshotBytes": 42131,
+      "truncated": false,
+      "structure": {
+        "title": "时光选彩 · 小程序 UI 高保真原型",
+        "firstH1": "彩时光选彩",
+        "viewport": {
+          "w": 500,
+          "h": 690
+        },
+        "fullpage": {
+          "w": 500,
+          "h": 920
+        },
+        "counts": {
+          "section": 5,
+          "h1": 5,
+          "h2": 1,
+          "img": 0,
+          "canvas": 0,
+          "svg": 6,
+          "links": 0,
+          "buttons": 15
+        }
+      },
+      "consoleErrors": [],
+      "consoleWarnings": [],
+      "horizontalOverflow": [],
+      "resourceErrors": [],
+      "reportSource": "cdp"
+    }
+  },
+  "engine": "chrome_cli",
+  "chromiumExec": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+  "engineDegraded": true,
+  "engineDegradedReason": "playwright 未装",
+  "elapsedSec": 16.82,
+  "schemaVersion": 2,
+  "status": "pass",
+  "engineInfo": {
+    "name": "chrome_cli",
+    "degraded": true,
+    "degradedReasons": [
+      "playwright 未装"
+    ]
+  },
+  "input": {
+    "original": "D:\\Projects\\PycharmProjects\\shiguang-lottery\\docs\\ui-prototype\\时光选彩小程序UI原型.html",
+    "resolvedPath": "D:\\Projects\\PycharmProjects\\shiguang-lottery\\docs\\ui-prototype\\时光选彩小程序UI原型.html",
+    "baseUrl": "file:///D:/Projects/PycharmProjects/shiguang-lottery/docs/ui-prototype/%E6%97%B6%E5%85%89%E9%80%89%E5%BD%A9%E5%B0%8F%E7%A8%8B%E5%BA%8FUI%E5%8E%9F%E5%9E%8B.html",
+    "protocol": "file",
+    "cwd": "D:\\Projects\\PycharmProjects\\shiguang-lottery",
+    "mediaMode": {
+      "reducedMotion": true
+    }
+  },
+  "artifacts": {
+    "screenshots": [
+      {
+        "viewport": "desktop",
+        "path": "D:\\Projects\\PycharmProjects\\shiguang-lottery\\docs\\ui-prototype\\_shots\\时光选彩小程序UI原型_desktop.jpg",
+        "size": 34299,
+        "visualCoverage": {
+          "complete": true,
+          "reason": null
+        }
+      },
+      {
+        "viewport": "mobile",
+        "path": "D:\\Projects\\PycharmProjects\\shiguang-lottery\\docs\\ui-prototype\\_shots\\时光选彩小程序UI原型_mobile.jpg",
+        "size": 42131,
+        "visualCoverage": {
+          "complete": true,
+          "reason": null
+        }
+      }
+    ]
+  },
+  "summary": {
+    "blocker": 0,
+    "error": 0,
+    "warning": 0,
+    "info": 0
+  },
+  "findings": [],
+  "prioritizedActions": [],
+  "reportPath": "D:\\Projects\\PycharmProjects\\shiguang-lottery\\docs\\ui-prototype\\_shots\\report.json"
+}

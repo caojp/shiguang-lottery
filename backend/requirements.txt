@@ -1,0 +1,11 @@
+fastapi>=0.115
+uvicorn[standard]>=0.32
+pydantic>=2.9
+pydantic-settings>=2.6
+SQLAlchemy[asyncio]>=2.0.36
+asyncpg>=0.30
+alembic>=1.14
+httpx>=0.27
+psycopg[binary]>=3.2   # 仅供 Alembic 迁移使用（运行时用 asyncpg）
+pytest>=8.3
+pytest-asyncio>=0.24

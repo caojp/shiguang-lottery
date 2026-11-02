@@ -1,0 +1,3 @@
+streamlit>=1.36
+pandas>=2.0
+# 开发依赖：python -m pip install pytest

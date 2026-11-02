@@ -1,0 +1,23 @@
+# 时光选彩 后端镜像（FastAPI + Uvicorn）
+# 构建上下文 = 项目根目录：docker build -f deploy/Dockerfile.backend .
+FROM python:3.11-slim
+
+ENV PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PYTHONDONTWRITEBYTECODE=1
+
+WORKDIR /app
+
+# 先装依赖（利于 Docker 层缓存）
+COPY backend/requirements.txt /app/backend/requirements.txt
+RUN pip install --no-cache-dir -r /app/backend/requirements.txt
+
+# 再拷代码
+COPY backend/ /app/backend/
+
+WORKDIR /app/backend
+EXPOSE 8000
+
+# 启动前先执行数据库迁移，再起服务（--workers 2 多进程）
+# alembic.ini 位于 backend/ 下，WORKDIR 已指向该目录
+CMD ["sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 2"]

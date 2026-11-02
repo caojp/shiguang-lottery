@@ -1,0 +1,150 @@
+﻿
+> shiguang-lottery-miniapp@0.1.0 dev:h5
+> uni
+
+Please note that in running mode, due to log output, sourcemap, and uncompressed source code, the performance and package size are not as good as release mode.
+Vite is compiled on demand, and clicking on an uncompiled page at runtime will compile first and then load, resulting in a slower display, and there is no such problem after release.
+Compiler version: 4.36（vue3）
+Compiling...
+[36m
+  vite v5.2.8[39m[32m dev server running at:
+[39m
+  [32m➜[39m  [1mLocal[22m:   [36mhttp://localhost:[1m5173[22m/[39m
+  [32m➜[39m  [1mNetwork[22m: [36mhttp://192.168.6.1:[1m5173[22m/[39m
+  [32m➜[39m  [1mNetwork[22m: [36mhttp://192.168.89.1:[1m5173[22m/[39m
+  [32m➜[39m  [1mNetwork[22m: [36mhttp://192.168.1.198:[1m5173[22m/[39m
+  [32m➜[39m  [1mNetwork[22m: [36mhttp://172.21.160.1:[1m5173[22m/[39m
+
+  [36mready in 3136ms.[39m
+
+node.exe : (node:23184) [DEP0060] DeprecationWarning: The `util._extend` API is deprecated. Please use Object.assign() 
+instead.
+所在位置 行:1 字符: 1
++ & "C:\Users\caojianping\AppData\Local\Doubao\User Data\sandbox_runtim ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ((node:23184) [D...sign() instead.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+(Use `node --trace-deprecation ...` to show where the warning was created)
+[2m22:29:03[22m [31m[1m[vite][22m[39m [35m[plugin:vite:css][39m [31mPreprocessor dependency "sass" not found. 
+Did you install it? Try `npm install -D sass`.[39m
+at [36mApp.vue:1:0[39m
+[2m22:45:21[22m [31m[1m[vite][22m[39m [35m[plugin:vite:css][39m [31mPreprocessor dependency "sass" not found. 
+Did you install it? Try `npm install -D sass`.[39m
+at [36mApp.vue:1:0[39m
+DEPRECATION WARNING [legacy-js-api]: The legacy JS API is deprecated and will be removed in Dart Sass 2.0.0.
+
+More info: https://sass-lang.com/d/legacy-js-api
+
+DEPRECATION WARNING [legacy-js-api]: The legacy JS API is deprecated and will be removed in Dart Sass 2.0.0.
+
+More info: https://sass-lang.com/d/legacy-js-api
+
+DEPRECATION WARNING [import]: Sass @import rules are deprecated and will be removed in Dart Sass 3.0.0.
+
+More info and automated migrator: https://sass-lang.com/d/import
+
+   ╷
+20 │ @import '@/uni.scss';
+   │         ^^^^^^^^^^^^
+   ╵
+    src\pages\pick\pick.vue 20:9  root stylesheet
+
+DEPRECATION WARNING [legacy-js-api]: The legacy JS API is deprecated and will be removed in Dart Sass 2.0.0.
+
+More info: https://sass-lang.com/d/legacy-js-api
+
+DEPRECATION WARNING [import]: Sass @import rules are deprecated and will be removed in Dart Sass 3.0.0.
+
+More info and automated migrator: https://sass-lang.com/d/import
+
+   ╷
+20 │ @import '@/uni.scss';
+   │         ^^^^^^^^^^^^
+   ╵
+    src\components\ai-fab.vue 20:9  root stylesheet
+
+DEPRECATION WARNING [legacy-js-api]: The legacy JS API is deprecated and will be removed in Dart Sass 2.0.0.
+
+More info: https://sass-lang.com/d/legacy-js-api
+
+DEPRECATION WARNING [import]: Sass @import rules are deprecated and will be removed in Dart Sass 3.0.0.
+
+More info and automated migrator: https://sass-lang.com/d/import
+
+   ╷
+20 │ @import '@/uni.scss';
+   │         ^^^^^^^^^^^^
+   ╵
+    src\components\tip-dot.vue 20:9  root stylesheet
+
+DEPRECATION WARNING [legacy-js-api]: The legacy JS API is deprecated and will be removed in Dart Sass 2.0.0.
+
+More info: https://sass-lang.com/d/legacy-js-api
+
+DEPRECATION WARNING [import]: Sass @import rules are deprecated and will be removed in Dart Sass 3.0.0.
+
+More info and automated migrator: https://sass-lang.com/d/import
+
+   ╷
+20 │ @import '@/uni.scss';
+   │         ^^^^^^^^^^^^
+   ╵
+    src\components\ball.vue 20:9  root stylesheet
+
+DEPRECATION WARNING [legacy-js-api]: The legacy JS API is deprecated and will be removed in Dart Sass 2.0.0.
+
+More info: https://sass-lang.com/d/legacy-js-api
+
+DEPRECATION WARNING [import]: Sass @import rules are deprecated and will be removed in Dart Sass 3.0.0.
+
+More info and automated migrator: https://sass-lang.com/d/import
+
+   ╷
+20 │ @import '@/uni.scss';
+   │         ^^^^^^^^^^^^
+   ╵
+    src\pages\backtest\backtest.vue 20:9  root stylesheet
+
+DEPRECATION WARNING [legacy-js-api]: The legacy JS API is deprecated and will be removed in Dart Sass 2.0.0.
+
+More info: https://sass-lang.com/d/legacy-js-api
+
+DEPRECATION WARNING [import]: Sass @import rules are deprecated and will be removed in Dart Sass 3.0.0.
+
+More info and automated migrator: https://sass-lang.com/d/import
+
+   ╷
+20 │ @import '@/uni.scss';
+   │         ^^^^^^^^^^^^
+   ╵
+    src\pages\analysis\analysis.vue 20:9  root stylesheet
+
+DEPRECATION WARNING [legacy-js-api]: The legacy JS API is deprecated and will be removed in Dart Sass 2.0.0.
+
+More info: https://sass-lang.com/d/legacy-js-api
+
+DEPRECATION WARNING [import]: Sass @import rules are deprecated and will be removed in Dart Sass 3.0.0.
+
+More info and automated migrator: https://sass-lang.com/d/import
+
+   ╷
+20 │ @import '@/uni.scss';
+   │         ^^^^^^^^^^^^
+   ╵
+    src\pages\data\data.vue 20:9  root stylesheet
+
+DEPRECATION WARNING [legacy-js-api]: The legacy JS API is deprecated and will be removed in Dart Sass 2.0.0.
+
+More info: https://sass-lang.com/d/legacy-js-api
+
+DEPRECATION WARNING [import]: Sass @import rules are deprecated and will be removed in Dart Sass 3.0.0.
+
+More info and automated migrator: https://sass-lang.com/d/import
+
+   ╷
+20 │ @import '@/uni.scss';
+   │         ^^^^^^^^^^^^
+   ╵
+    src\pages\mine\mine.vue 20:9  root stylesheet
+

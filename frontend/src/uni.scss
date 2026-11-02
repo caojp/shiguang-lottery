@@ -1,0 +1,29 @@
+/* UI 设计规范 Design Tokens（与 docs/UI设计规范.md 对齐） */
+$sg-primary: #E03C31;      /* 双色球红 · 主色 */
+$sg-blue: #2F54EB;         /* 数据蓝 */
+$sg-gold: #F7B500;         /* 中奖金 */
+$sg-orange: #FF8F1F;       /* 大乐透橙 */
+$sg-bg: #F5F6FA;
+$sg-card: #FFFFFF;
+$sg-t1: #1F2329;
+$sg-t2: #646A73;
+$sg-t3: #8F959E;
+$sg-line: #E5E6EB;
+$sg-success: #00B578;
+$sg-danger: #E0342F;
+
+/* 圆角与阴影 */
+$sg-radius-card: 28rpx;
+$sg-radius-inner: 20rpx;
+$sg-radius-pill: 999rpx;
+$sg-shadow-card: 0 8rpx 24rpx rgba(31, 35, 41, 0.06);
+$sg-shadow-float: 0 -16rpx 60rpx rgba(0, 0, 0, 0.15);
+
+/* 间距 */
+$sg-gap: 24rpx;
+$sg-page-x: 32rpx;
+
+/* 号码球尺寸 */
+$ball-md: 76rpx;
+$ball-sm: 52rpx;
+

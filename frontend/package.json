@@ -1,0 +1,29 @@
+{
+  "name": "shiguang-lottery-miniapp",
+  "version": "0.1.0",
+  "description": "时光选彩 · 模拟彩票选号与开奖分析小程序（uni-app 多端）",
+  "scripts": {
+    "dev:h5": "uni",
+    "dev:mp-weixin": "uni -p mp-weixin",
+    "build:h5": "uni build",
+    "build:mp-weixin": "uni build -p mp-weixin"
+  },
+  "dependencies": {
+    "@dcloudio/uni-app": "3.0.0-4030620241128001",
+    "@dcloudio/uni-components": "3.0.0-4030620241128001",
+    "@dcloudio/uni-h5": "3.0.0-4030620241128001",
+    "@dcloudio/uni-mp-weixin": "3.0.0-4030620241128001",
+    "marked": "^12.0.2",
+    "vue": "^3.4.21",
+    "vue-i18n": "^9.1.9"
+  },
+  "devDependencies": {
+    "@dcloudio/uni-automator": "3.0.0-4030620241128001",
+    "@dcloudio/uni-cli-shared": "3.0.0-4030620241128001",
+    "@dcloudio/uni-stacktracey": "3.0.0-4030620241128001",
+    "@dcloudio/vite-plugin-uni": "3.0.0-4030620241128001",
+    "@vue/runtime-core": "^3.4.21",
+    "sass": "^1.106.1",
+    "vite": "5.2.8"
+  }
+}

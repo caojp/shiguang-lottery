@@ -1,0 +1,54 @@
+{
+  "pages": [
+    { "path": "pages/pick/pick", "style": { "navigationBarTitleText": "选号", "navigationStyle": "custom" } },
+    { "path": "pages/backtest/backtest", "style": { "navigationBarTitleText": "回测" } },
+    { "path": "pages/analysis/analysis", "style": { "navigationBarTitleText": "分析" } },
+    { "path": "pages/data/data", "style": { "navigationBarTitleText": "数据" } },
+    { "path": "pages/jingcai/jingcai", "style": { "navigationBarTitleText": "竞彩足球" } },
+    { "path": "pages/mine/mine", "style": { "navigationBarTitleText": "我的" } }
+  ],
+  "globalStyle": {
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "时光选彩",
+    "navigationBarBackgroundColor": "#FFFFFF",
+    "backgroundColor": "#F5F6FA"
+  },
+  "tabBar": {
+    "color": "#8F959E",
+    "selectedColor": "#E03C31",
+    "backgroundColor": "#FFFFFF",
+    "borderStyle": "white",
+    "list": [
+      {
+        "pagePath": "pages/pick/pick",
+        "text": "选号",
+        "iconPath": "static/tabbar/pick.png",
+        "selectedIconPath": "static/tabbar/pick-active.png"
+      },
+      {
+        "pagePath": "pages/backtest/backtest",
+        "text": "回测",
+        "iconPath": "static/tabbar/backtest.png",
+        "selectedIconPath": "static/tabbar/backtest-active.png"
+      },
+      {
+        "pagePath": "pages/analysis/analysis",
+        "text": "分析",
+        "iconPath": "static/tabbar/analysis.png",
+        "selectedIconPath": "static/tabbar/analysis-active.png"
+      },
+      {
+        "pagePath": "pages/data/data",
+        "text": "数据",
+        "iconPath": "static/tabbar/data.png",
+        "selectedIconPath": "static/tabbar/data-active.png"
+      },
+      {
+        "pagePath": "pages/mine/mine",
+        "text": "我的",
+        "iconPath": "static/tabbar/mine.png",
+        "selectedIconPath": "static/tabbar/mine-active.png"
+      }
+    ]
+  }
+}

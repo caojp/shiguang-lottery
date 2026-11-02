@@ -1,0 +1,26 @@
+# 环境变量与密钥（模板文件 .env.example / .env.prod 仍会提交）
+.env
+.env.*
+!.env.example
+!deploy/.env.prod
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+*.egg-info/
+
+# 前端
+node_modules/
+frontend/dist/
+frontend/unpackage/
+.vite/
+
+# 构建与部署产物
+*.tar.gz
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
