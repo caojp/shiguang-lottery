@@ -81,6 +81,50 @@ class AgentChatRequest(BaseModel):
     message: str = Field(min_length=1)
 
 
+# ---------------------------------------------------------------- 用户认证
+
+class UserCreate(BaseModel):
+    username: str = Field(min_length=3, max_length=20)
+    password: str = Field(min_length=6, max_length=64)
+
+
+class UserOut(BaseModel):
+    id: int
+    username: str
+
+
+class TokenOut(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    user: UserOut
+
+
+# ---------------------------------------------------------------- 选号记录（登录用户）
+
+class PickSaveRequest(BaseModel):
+    game_code: str
+    mode: str = "random"                       # random | strategy | history | manual
+    play: str = ""
+    count: int = Field(default=1, ge=1, le=100)
+    cost: int = Field(default=0, ge=0)
+    tickets: list[TicketIn] = Field(min_length=1, max_length=100)
+    draw: Optional[dict[str, Any]] = None      # 模拟开奖结果（仅开奖后保存时传入）
+    win: int = Field(default=0, ge=0)
+
+
+class PickRecordOut(BaseModel):
+    id: int
+    game_code: str
+    mode: str
+    play: str = ""
+    count: int
+    cost: int
+    win: int = 0
+    tickets: list[dict[str, Any]]              # [{zones, digits, display}]
+    draw: Optional[dict[str, Any]] = None
+    created_at: Optional[str] = None
+
+
 # ---------------------------------------------------------------- 响应
 
 class PickOut(BaseModel):

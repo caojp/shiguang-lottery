@@ -338,19 +338,33 @@
 - 系统提示词要求：娱乐/学习用途、不涉及真实投注、策略不改变中奖概率、涉及概率必须附带免责提醒。
 - 前端 AI 悬浮球：Markdown 渲染、复制、分享；对话历史本地持久化，最多保留 50 条。
 
-### 3.8 我的（本地记录与偏好）
+### 3.8 我的（账户、云端记录与偏好）
 
-- 模拟开奖成功后，将记录写入本地存储 `sg_records`，最多保留 20 条。
-- 记录字段：彩种、注数、号码摘要、结果、投入、中奖金额、时间。
-- “我的”页展示累计模拟次数、累计投入、累计中奖、净盈亏；仅统计含金额字段的新记录。
-- 支持清空本地记录。
+- 页面顶部为账户卡（V1.3 新增）：未登录时提供「登录 / 注册」入口；已登录展示用户名与「退出」。
+- 记录区双轨：
+  - 未登录：沿用本地存储 `sg_records`，模拟开奖成功后写入，最多 20 条，支持清空。
+  - 已登录：展示云端记录（`user_picks`，从服务器拉取，倒序最近 50 条）；选号页「保存」与开奖后自动保存均写入云端。
+- 记录字段：彩种、注数、号码摘要、结果（中奖 / 未中奖 / 仅选号）、投入、中奖金额、时间。
+- 累计战绩（模拟次数、累计投入、累计中奖、净盈亏）按当前记录源统计；仅统计含金额字段的记录。
 - 偏好设置：
   - 一等奖模拟值展示（当前固定展示 500 万，仅作说明）。
   - 大乐透奖池联动开关本地保存（`sg_pool_high`）；实际模拟以选号页当前开关为准，其默认值来自彩种配置 `pool_high`。
   - 默认注数展示。
 - 关于区：免责声明、数据来源、版本号。
 
-### 3.9 竞彩足球（预览）
+### 3.9 用户账户与云端记录（V1.3 新增）
+
+- 注册 / 登录：用户名（3-20 位字母、数字、下划线）+ 密码（6-64 位）；注册成功后自动登录。
+- 认证方式：后端签发 JWT（HS256，默认 7 天有效），前端本地存储 token，随请求携带 `Authorization: Bearer`；401 时前端自动清除登录态并提示重新登录。
+- 密码存储：PBKDF2-SHA256 加盐哈希，不存明文（标准库实现，避免额外依赖）。
+- 保存选号记录：
+  - 选号页「我的号码」卡片提供「保存」按钮（仅登录用户可见），保存当前选号（未开奖）。
+  - 模拟开奖成功后自动保存（含开奖号码与中奖金额）到云端，同时保留本地记录。
+- 「我的」页云端记录：倒序展示最近 50 条，含彩种、注数、号码摘要、结果与时间。
+- 记录内容由后端基于彩种规则重新格式化（display），不信任前端传入展示文本。
+- 与打赏 / 变现完全脱钩：账户仅用于保存模拟记录，不涉及任何真实购彩、支付或权益绑定（与 1.6 合规口径一致）。
+
+### 3.10 竞彩足球（预览）
 
 - 独立页面 `pages/jingcai/jingcai`，以“规划中”预览形态呈现。
 - 展示示例赛事、胜平负赔率、玩法规划（胜平负、让球胜平负、比分、总进球、半全场、串关）与上线前准备。
@@ -369,8 +383,8 @@
 | 技术栈 | 后端 Python 3.11 + FastAPI + SQLAlchemy 2.0 Core + asyncpg；前端 uni-app（Vue 3 + Vite）；数据库 PostgreSQL 16 |
 | 随机性 | `random.SystemRandom`；模拟开奖与机选共用独立随机源；不承诺密码学安全 |
 | 数据一致性 | 历史开奖幂等写入；写操作在事务内提交；连接池 `pool_pre_ping` 与定期回收 |
-| 匿名会话 | 前端本地生成 `sg_session_id`，用于 `bets` / `backtest_reports` 归属；不做登录与账户 |
-| 安全 | LLM、数据库口令等敏感配置走环境变量；CORS 白名单可配置；不在前端硬编码密钥 |
+| 会话与账户 | 未登录沿用匿名 `sg_session_id`（`bets` / `backtest_reports`）；V1.3 新增用户名密码登录（JWT），登录后选号记录归 `user_picks` |
+| 安全 | LLM、数据库口令、JWT `SECRET_KEY` 等敏感配置走环境变量；CORS 白名单可配置；密码 PBKDF2-SHA256 加盐存储；不在前端硬编码密钥 |
 | 可观测性 | `/api/health` 健康检查；定时任务与引导入库记录结构化日志 |
 | 部署与 CI | Docker Compose 三容器（PG / 后端 / Nginx）；GitHub Actions 执行引擎冒烟测试与前端构建，推送镜像到 GHCR |
 | 测试 | 引擎冒烟测试无需数据库；DB 集成测试通过 `RUN_DB_TESTS=1` 开启 |
@@ -381,7 +395,7 @@
 
 ### 5.1 信息架构
 
-底部 5 个 Tab：**选号 / 回测 / 分析 / 数据 / 我的**；竞彩足球为选号页入口跳转的独立页面。
+底部 5 个 Tab：**选号 / 回测 / 分析 / 数据 / 我的**；竞彩足球为选号页入口跳转的独立页面；登录页为「我的」页入口跳转的独立页面（非 Tab）。
 
 ### 5.2 选号页
 
@@ -423,8 +437,9 @@
 
 ### 5.6 我的页
 
+- 账户卡：未登录展示「登录 / 注册」入口；已登录展示用户名与退出登录（V1.3 新增）。
 - 累计战绩卡：模拟次数、累计投入、累计中奖、净盈亏。
-- 模拟记录列表：彩种徽标、注数、号码摘要、时间、结果与投入；支持清空。
+- 记录列表：彩种徽标、注数、号码摘要、时间、结果（中奖 / 未中奖 / 仅选号）与投入；未登录为本地记录（可清空），已登录为云端记录（最近 50 条）。
 - 偏好设置：一等奖模拟值、大乐透奖池联动、默认注数。
 - 关于：可展开免责声明、数据来源、版本号。
 
@@ -432,7 +447,8 @@
 
 - 切换彩种时，选号模式、号码池、玩法、开奖日、奖池联动同步更新，并清空上一轮结果。
 - 生成号码后修改模式、玩法、复式或奖池开关，均清空旧结果，避免结果与参数不一致。
-- 点击“模拟开奖并判定”后自动逐注对奖并汇总；成功后写入本地记录。
+- 点击“模拟开奖并判定”后自动逐注对奖并汇总；成功后写入本地记录，登录用户同时自动保存到云端。
+- 生成号码后，登录用户可通过「我的号码」卡片的「保存」按钮把当前选号保存到云端。
 - 分析 / 回测 / 数据页共享当前彩种选择。
 - 所有帮助提示通过 `tip-dot` 居中弹窗展示，长内容可滚动，必须提供关闭按钮。
 
@@ -451,12 +467,13 @@ shiguang-lottery/
 │   │   ├── main.py              # FastAPI 入口、CORS、路由注册、启动引导
 │   │   ├── settings.py          # 环境变量配置
 │   │   ├── db.py                # 异步引擎与会话工厂
-│   │   ├── models.py            # games / draw_history / bets / backtest_reports
+│   │   ├── models.py            # games / draw_history / bets / backtest_reports / users / user_picks
 │   │   ├── schemas.py           # Pydantic 请求响应模型
+│   │   ├── security.py          # 密码哈希（PBKDF2-SHA256）与 JWT 认证（V1.3 新增）
 │   │   ├── engine/              # config / engine / draw / prize / stats
 │   │   ├── services/            # analysis / backtest / history / scheduler
 │   │   ├── agent/               # orchestrator / functions
-│   │   └── routers/             # games / picks / draws / backtests / analysis / data / agent
+│   │   └── routers/             # auth / games / picks / draws / backtests / analysis / data / agent
 │   ├── alembic/                 # 数据库迁移
 │   ├── scripts/fetch_history.py # 命令行历史入库与缺口检查
 │   └── tests/                   # 引擎冒烟测试 + DB 集成测试
@@ -482,6 +499,9 @@ shiguang-lottery/
 | `PrizeResult` | `level`、`level_index`、`money`、`hits`；`won` 属性 |
 | `PickOut` | `game_code`、`mode`、`count`、`price`、`cost`、`play`、`tickets`、`basis` |
 | `DrawOut` | `game_code`、`draw`、`cost`、`win`、`profit`、`hit_count`、`results`、`bet_id` |
+| `UserCreate` | 注册 / 登录入参：`username`、`password` |
+| `TokenOut` | 登录 / 注册返回：`access_token`、`token_type`、`user`（`id` / `username`） |
+| `PickRecordOut` | 云端选号记录：`id`、`game_code`、`mode`、`play`、`count`、`cost`、`win`、`tickets`、`draw`、`created_at` |
 | `BacktestOut` | 平均命中/相似度、基线、显著性、成本/中奖/ROI、中奖率、逐期明细 |
 
 ### 6.3 数据库表
@@ -492,6 +512,8 @@ shiguang-lottery/
 | `draw_history` | 历史开奖 | `game_code`、`issue`、`draw_date`、`numbers_json`、`source`；`UNIQUE(game_code, issue)` |
 | `bets` | 模拟投注 | `session_id`、`game_code`、`bet_type`、`numbers_json`、`ticket_count`、`stake`、`prize_level`、`prize_money`、`pool_high` |
 | `backtest_reports` | 回测报告 | `session_id`、`game_code`、`strategy_json`、`periods`、`avg_hits`、`avg_similarity`、`baseline_*`、`is_significant`、`detail_json` |
+| `users` | 用户账户（V1.3） | `id`（PK）、`username`（UNIQUE）、`password_hash`、`created_at` |
+| `user_picks` | 登录用户选号记录（V1.3） | `user_id`（FK users）、`game_code`、`mode`、`play`、`count`、`cost`、`numbers_json`、`draw_json`、`win`、`created_at` |
 
 ### 6.4 关键接口
 
@@ -511,6 +533,11 @@ shiguang-lottery/
 | GET | `/api/data/history` | 最近开奖列表 |
 | POST | `/api/agent/chat` | Agent SSE 流式对话 |
 | POST | `/api/agent/chat-sync` | Agent 非流式对话（低带宽 / 兼容场景；原小程序端设计，接口保留） |
+| POST | `/api/auth/register` | 注册（用户名 + 密码），成功后返回 token（V1.3） |
+| POST | `/api/auth/login` | 登录，返回 token（V1.3） |
+| GET | `/api/auth/me` | 当前登录用户（V1.3） |
+| POST | `/api/picks/save` | 登录用户保存选号记录（可含开奖结果）（V1.3） |
+| GET | `/api/picks/mine` | 登录用户查询自己的选号记录（倒序）（V1.3） |
 
 ### 6.5 Agent SSE 事件协议
 
@@ -541,6 +568,8 @@ shiguang-lottery/
 | A12 | 界面持续展示“模拟用途”与“策略不改变概率”提示 |
 | A13 | 引擎冒烟测试通过；配置数据库后可运行集成测试 |
 | A14 | 前端 `npm run build:h5` 通过 |
+| A15 | 注册 / 登录 / 当前用户接口可用：用户名规则与密码长度校验、重复用户名拒绝、错误密码 401（V1.3） |
+| A16 | 登录用户可保存选号记录（含开奖结果）并在「我的」页倒序查看；未登录时保存接口返回 401（V1.3） |
 
 ---
 
@@ -553,7 +582,7 @@ shiguang-lottery/
 | 真实购彩 / 支付 | 不涉及任何真实交易 |
 | 微信小程序发布 | V1.2 决策放弃：平台对彩票模拟 / 选号类功能未开放类目，收费（含打赏）可能被认定为变相售彩 |
 | 官方开奖实时抓取 | 当前 `fetch` 使用演示生成器；官方抓取仅保留扩展点 |
-| 用户账户体系 | 单机 / 匿名会话，不做登录、同步与多用户 |
+| 第三方登录 / 找回密码 / 邮箱验证 | 账户体系仅提供用户名密码注册登录；第三方 OAuth、找回密码、邮箱验证不在本期范围 |
 | 复式 / 胆拖 | 已支持乐透型复式（≤100 注）；**胆拖仍未实现** |
 | 竞彩 / 传统足彩 | 依赖真实赛果，仅提供“规划中”预览 |
 | 刮刮乐 | 无选号过程 |
@@ -570,6 +599,7 @@ shiguang-lottery/
 - 前端兜底彩种配置不含完整奖级表；后端不可用时选号页可预览号码池与单价，但奖级条件说明为空。
 - “我的”页奖池联动开关为本地偏好；实际模拟以选号页开关为准。
 - 冷热号策略依赖冷热号接口返回的频次数据；数据缺失时该策略自动跳过并提示。
+- 云端记录未提供删除 / 分页接口（当前展示最近 50 条）；本地记录清空仅作用于未登录状态。
 
 ---
 
@@ -605,6 +635,17 @@ shiguang-lottery/
 | 移动适配 | H5 与微信小程序同一套交互 | H5 移动端优先，不再维护小程序构建 |
 | 验收 A11 | H5 / 微信小程序构建通过 | 仅要求 H5 构建通过 |
 | 合规说明 | 仅免责声明（原 1.4） | 新增 1.6 合规性说明：载体、收款边界、内容红线与法律依据 |
+
+### 9.2 V1.3 变更（2026-11-03 · 用户账户与云端记录）
+
+| 项 | V1.2 描述 | V1.3 当前口径 |
+|---|---|---|
+| 用户账户 | 无账户体系，匿名 `session_id` | 新增用户名密码注册 / 登录，JWT（HS256，默认 7 天），密码 PBKDF2-SHA256 加盐存储 |
+| 选号记录 | 仅前端本地 `sg_records`（最多 20 条） | 登录用户保存到云端 `user_picks`；选号页可手动保存，开奖后自动保存；「我的」页双轨展示（未登录本地 / 已登录云端） |
+| 新增接口 | — | `/api/auth/register`、`/api/auth/login`、`/api/auth/me`、`/api/picks/save`、`/api/picks/mine` |
+| 数据库 | 4 表 | 新增 `users`、`user_picks`（迁移 0002） |
+| 配置 | — | 新增 `SECRET_KEY`、`TOKEN_EXPIRE_MINUTES` |
+| 合规 | 账户与打赏完全脱钩 | 账户仅用于保存模拟记录，不涉及真实购彩 / 支付 / 权益绑定（延续 1.6 口径） |
 
 ---
 
@@ -643,6 +684,8 @@ shiguang-lottery/
 | `AUTO_FETCH_ENABLED` | 每日自动入库开关 | `true` |
 | `AUTO_FETCH_HOUR` / `AUTO_FETCH_MINUTE` | 自动入库时间（北京时间） | `21` / `35` |
 | `AUTO_SEED_PERIODS` | 首次无数据时的引导期数 | `60` |
+| `SECRET_KEY` | JWT 签名密钥（V1.3 新增，生产必须用 ≥32 字节强随机值） | 开发默认值 |
+| `TOKEN_EXPIRE_MINUTES` | JWT 有效期（分钟）（V1.3 新增） | `10080`（7 天） |
 
 ## 附录 D：关键参数上限
 
@@ -658,4 +701,5 @@ shiguang-lottery/
 | 数据页最近开奖 | 1–50 期 |
 | 手动补拉期数 | 1–200 |
 | 本地模拟记录 | 最多 20 条 |
+| 云端选号记录 | 接口单次拉取最近 50 条（V1.3） |
 | AI 对话本地历史 | 最多 50 条 |

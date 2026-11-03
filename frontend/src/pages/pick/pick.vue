@@ -194,6 +194,8 @@
       <view class="card-title">
         <text>我的号码</text>
         <view class="ticket-sum">
+          <text v-if="isLogged && !saving" class="save-btn" @click="saveOnlyPick">保存</text>
+          <text v-if="isLogged && saving" class="save-btn dim">保存中…</text>
           <text>{{ tickets.length }} 注</text>
           <text class="sum-sep">·</text>
           <text>¥{{ ticketsCost }}</text>
@@ -310,7 +312,7 @@ import Ball from '@/components/ball.vue'
 import TipDot from '@/components/tip-dot.vue'
 import AiFab from '@/components/ai-fab.vue'
 import { api } from '@/api/index'
-import { getSessionId } from '@/api/request'
+import { getSessionId, getToken } from '@/api/request'
 import { FALLBACK_GAMES, getCurrentGameCode, setCurrentGameCode, loadGames, gameIndexByCode } from '@/store/game'
 
 export default {
@@ -329,6 +331,8 @@ export default {
       results: [],
       summary: { cost: 0, win: 0, profit: 0 },
       drawing: false,
+      saving: false,
+      isLogged: !!getToken(),
       play: '',
       compound: false,
       poolHigh: false,
@@ -465,6 +469,7 @@ export default {
   onShow() {
     const code = getCurrentGameCode()
     if (code !== this.curCode) this.switchGame(code)
+    this.isLogged = !!getToken()
   },
   methods: {
     async loadGameList() {
@@ -698,6 +703,7 @@ export default {
         this.results = res.results
         this.summary = { cost: res.cost, win: res.win, profit: res.profit }
         this.saveRecord(res)
+        if (this.isLogged) this.savePickServer(res)
       } catch (err) {
         uni.showToast({ title: err.message, icon: 'none' })
       } finally {
@@ -720,6 +726,33 @@ export default {
         time: new Date().toLocaleString(),
       })
       uni.setStorageSync('sg_records', list.slice(0, 20))
+    },
+    /** 登录用户把当前选号保存到云端（drawRes 为空表示仅保存选号，未开奖） */
+    async savePickServer(drawRes) {
+      try {
+        await api.savePick({
+          game_code: this.curCode,
+          mode: this.mode,
+          play: this.curGame && this.curGame.digits ? this.play : '',
+          count: this.tickets.length,
+          cost: drawRes ? drawRes.cost : this.ticketsCost,
+          tickets: this.tickets,
+          draw: drawRes ? drawRes.draw : null,
+          win: drawRes ? drawRes.win : 0,
+        })
+        uni.showToast({ title: '已保存到我的记录', icon: 'success' })
+      } catch (err) {
+        this.isLogged = !!getToken()
+        uni.showToast({ title: err.message, icon: 'none' })
+      }
+    },
+    /** 「我的号码」卡片上的保存按钮：仅保存当前选号 */
+    saveOnlyPick() {
+      if (this.saving) return
+      this.saving = true
+      this.savePickServer(null).finally(() => {
+        this.saving = false
+      })
     },
     ticketOf(r) {
       return this.tickets[r.index] || { zones: {}, digits: '' }
@@ -991,6 +1024,15 @@ export default {
 }
 .pool-row {
   margin-top: 8rpx;
+}
+.save-btn {
+  font-size: 24rpx;
+  color: $sg-primary;
+  font-weight: 600;
+  margin-right: 12rpx;
+}
+.save-btn.dim {
+  color: $sg-t3;
 }
 .ticket-sum {
   display: flex;

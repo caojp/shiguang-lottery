@@ -5,7 +5,8 @@
     { "path": "pages/analysis/analysis", "style": { "navigationBarTitleText": "分析" } },
     { "path": "pages/data/data", "style": { "navigationBarTitleText": "数据" } },
     { "path": "pages/jingcai/jingcai", "style": { "navigationBarTitleText": "竞彩足球" } },
-    { "path": "pages/mine/mine", "style": { "navigationBarTitleText": "我的" } }
+    { "path": "pages/mine/mine", "style": { "navigationBarTitleText": "我的" } },
+    { "path": "pages/login/login", "style": { "navigationBarTitleText": "登录" } }
   ],
   "globalStyle": {
     "navigationBarTextStyle": "black",

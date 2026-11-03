@@ -10,7 +10,7 @@ from sqlalchemy import select
 
 from . import db, models
 from .engine.config import GAMES
-from .routers import agent, analysis, backtests, data, draws, games, picks
+from .routers import agent, analysis, auth, backtests, data, draws, games, picks
 from .schemas import game_out
 from .services.scheduler import daily_fetch_loop
 from .settings import get_settings
@@ -58,6 +58,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(auth.router)
 app.include_router(games.router)
 app.include_router(picks.router)
 app.include_router(draws.router)

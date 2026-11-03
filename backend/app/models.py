@@ -1,9 +1,11 @@
-"""四张核心表（SQLAlchemy 2.0 Core，不使用 ORM relationship）。
+"""核心表（SQLAlchemy 2.0 Core，不使用 ORM relationship）。
 
 - games            彩种静态配置（JSONB 存储规则）
 - draw_history     历史开奖（UNIQUE(game_code, issue)，幂等写入）
 - bets             模拟投注（session_id 匿名，支持单式/复式、ticket_count）
 - backtest_reports 回测报告（策略 vs 基线对照、显著性、detail JSONB）
+- users            用户账户（用户名 + 密码哈希，JWT 认证）
+- user_picks       登录用户的模拟选号记录（含可选开奖结果）
 """
 from __future__ import annotations
 
@@ -13,6 +15,7 @@ from sqlalchemy import (
     Column,
     Date,
     DateTime,
+    ForeignKey,
     Index,
     Integer,
     MetaData,
@@ -84,4 +87,30 @@ backtest_reports = Table(
     Column("detail_json", JSONB, nullable=False, server_default="{}"),
     Column("created_at", DateTime(timezone=True), server_default=func.now()),
     Index("ix_backtest_reports_session_created", "session_id", "created_at"),
+)
+
+users = Table(
+    "users",
+    metadata,
+    Column("id", BigInteger, primary_key=True, autoincrement=True),
+    Column("username", String(20), nullable=False, unique=True),      # 字母/数字/下划线，3-20 位
+    Column("password_hash", String(255), nullable=False),             # pbkdf2_sha256$iter$salt$hash
+    Column("created_at", DateTime(timezone=True), server_default=func.now()),
+)
+
+user_picks = Table(
+    "user_picks",
+    metadata,
+    Column("id", BigInteger, primary_key=True, autoincrement=True),
+    Column("user_id", BigInteger, ForeignKey("users.id", ondelete="CASCADE"), nullable=False),
+    Column("game_code", String(16), nullable=False),
+    Column("mode", String(16), nullable=False, server_default="random"),   # random/strategy/history/manual
+    Column("play", String(16), nullable=False, server_default=""),
+    Column("count", Integer, nullable=False, server_default="1"),
+    Column("cost", Integer, nullable=False, server_default="0"),
+    Column("numbers_json", JSONB, nullable=False),     # [{zones, digits, display}]
+    Column("draw_json", JSONB, nullable=True),         # 模拟开奖结果（未开奖保存时为 NULL）
+    Column("win", BigInteger, nullable=False, server_default="0"),
+    Column("created_at", DateTime(timezone=True), server_default=func.now()),
+    Index("ix_user_picks_user_created", "user_id", "created_at"),
 )

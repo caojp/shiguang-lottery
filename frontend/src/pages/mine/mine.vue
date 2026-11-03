@@ -1,5 +1,25 @@
 <template>
   <view class="page">
+    <!-- 账户卡：未登录引导登录 / 已登录展示用户名与退出 -->
+    <view class="card user-card">
+      <block v-if="user">
+        <view class="u-avatar">{{ (user.username || '?').slice(0, 1).toUpperCase() }}</view>
+        <view class="u-main">
+          <text class="u-name">{{ user.username }}</text>
+          <text class="u-sub">选号记录已同步到云端</text>
+        </view>
+        <text class="u-logout" @click="logout">退出</text>
+      </block>
+      <block v-else>
+        <view class="u-avatar plain">登</view>
+        <view class="u-main">
+          <text class="u-name">未登录</text>
+          <text class="u-sub">登录后选号记录保存到云端，多设备可查看</text>
+        </view>
+        <text class="u-login" @click="goLogin">登录 / 注册</text>
+      </block>
+    </view>
+
     <!-- 累计战绩：仅统计含金额字段的记录（旧版记录不参与汇总） -->
     <view v-if="hasStats" class="card sum-card">
       <view class="sum-row">
@@ -22,22 +42,22 @@
           <text class="sum-lab">净盈亏</text>
         </view>
       </view>
-      <text class="sum-note">仅统计本地模拟记录，不代表真实购彩结果</text>
+      <text class="sum-note">{{ user ? '仅统计云端选号记录' : '仅统计本地模拟记录，不代表真实购彩结果' }}</text>
     </view>
 
     <view class="card">
       <view class="card-title">
-        <text>模拟记录</text>
-        <text class="clear" @click="clearHist">清空</text>
+        <text>{{ user ? '云端记录' : '模拟记录' }}</text>
+        <text v-if="!user" class="clear" @click="clearHist">清空</text>
       </view>
       <empty-state
-        v-if="!records.length"
-        title="暂无模拟记录"
-        hint="去「选号」页机选一注，模拟开奖后会记录在这里"
+        v-if="!shownRecords.length"
+        :title="user ? '暂无云端记录' : '暂无模拟记录'"
+        :hint="user ? '去「选号」页生成号码并保存，记录会同步到云端' : '去「选号」页机选一注，模拟开奖后会记录在这里'"
         action-text="去选号"
         @action="goPick"
       />
-      <view v-for="(r, i) in records" :key="i" class="rec">
+      <view v-for="(r, i) in shownRecords" :key="i" class="rec">
         <view class="rec-badge" :style="{ background: badgeColor(r) }">{{ badgeText(r) }}</view>
         <view class="rec-main">
           <text class="rec-game">{{ r.game }}<text v-if="r.count" class="rec-count"> · {{ r.count }} 注</text></text>
@@ -108,22 +128,34 @@
 <script>
 import TipDot from '@/components/tip-dot.vue'
 import EmptyState from '@/components/empty-state.vue'
+import { api } from '@/api/index'
+import { getUser, clearAuth } from '@/api/request'
+import { FALLBACK_GAMES } from '@/store/game'
 
 export default {
   name: 'Mine',
   components: { TipDot, EmptyState },
   data() {
     return {
+      user: getUser(),
       records: [],
+      serverRecords: [],
       poolHigh: uni.getStorageSync('sg_pool_high') !== '0',
       disclaimer: false,
     }
   },
   computed: {
+    // 登录后展示云端记录，未登录展示本地记录
+    shownRecords() {
+      if (this.user) {
+        return this.serverRecords.map((r) => this.toLocalRecord(r))
+      }
+      return this.records
+    },
     // 汇总仅基于带金额字段的新记录，旧记录（无 cost）跳过
     stats() {
       const s = { times: 0, cost: 0, win: 0, profit: 0 }
-      for (const r of this.records) {
+      for (const r of this.shownRecords) {
         if (r.cost == null) continue
         s.times += 1
         s.cost += r.cost || 0
@@ -137,9 +169,59 @@ export default {
     },
   },
   onShow() {
-    this.records = uni.getStorageSync('sg_records') || []
+    this.user = getUser()
+    if (this.user) {
+      this.loadServerRecords()
+    } else {
+      this.records = uni.getStorageSync('sg_records') || []
+    }
   },
   methods: {
+    gameName(code) {
+      const g = FALLBACK_GAMES.find((x) => x.code === code)
+      return g ? g.name : code
+    },
+    toLocalRecord(r) {
+      const shown = (r.tickets || [])
+        .map((t) => t.display || t.digits || '')
+        .filter(Boolean)
+        .slice(0, 3)
+      return {
+        game: this.gameName(r.game_code),
+        code: r.game_code,
+        nums: shown.join(' / ') + (r.count > 3 ? ` 等 ${r.count} 注` : ''),
+        result: r.win > 0 ? `中奖 ${r.win.toLocaleString()} 元` : r.draw ? '未中奖' : '仅选号',
+        count: r.count,
+        cost: r.cost,
+        win: r.win,
+        time: r.created_at ? new Date(r.created_at).toLocaleString() : '',
+      }
+    },
+    async loadServerRecords() {
+      try {
+        this.serverRecords = await api.myPicks(50)
+      } catch (err) {
+        // 401 已由请求层清除登录态；其余错误静默，保留空列表
+        if (String(err.message).includes('登录')) this.user = null
+      }
+    },
+    logout() {
+      uni.showModal({
+        title: '退出登录',
+        content: '确定退出当前账号吗？本地记录会保留',
+        success: (res) => {
+          if (res.confirm) {
+            clearAuth()
+            this.user = null
+            this.serverRecords = []
+            this.records = uni.getStorageSync('sg_records') || []
+          }
+        },
+      })
+    },
+    goLogin() {
+      uni.navigateTo({ url: '/pages/login/login' })
+    },
     badgeText(r) {
       return (r.game || '?').slice(0, 1)
     },
@@ -184,6 +266,60 @@ export default {
 .clear {
   font-size: 24rpx;
   color: $sg-t3;
+}
+
+/* 账户卡 */
+.user-card {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  padding: 28rpx;
+}
+.u-avatar {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 50%;
+  background: $sg-primary;
+  color: #fff;
+  font-size: 30rpx;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+}
+.u-avatar.plain {
+  background: #f1f2f5;
+  color: $sg-t3;
+}
+.u-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
+}
+.u-name {
+  font-size: 30rpx;
+  font-weight: 600;
+}
+.u-sub {
+  font-size: 22rpx;
+  color: $sg-t3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.u-login {
+  font-size: 26rpx;
+  color: $sg-primary;
+  font-weight: 600;
+  flex: none;
+}
+.u-logout {
+  font-size: 24rpx;
+  color: $sg-t3;
+  flex: none;
 }
 
 /* 累计战绩卡 */
@@ -315,12 +451,6 @@ export default {
 }
 .res.lose {
   color: $sg-t3;
-}
-.time {
-  display: block;
-  font-size: 20rpx;
-  color: $sg-t3;
-  text-align: right;
 }
 .r {
   font-size: 26rpx;

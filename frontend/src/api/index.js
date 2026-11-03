@@ -22,4 +22,13 @@ export const api = {
   fetchData: (payload = {}) => request({ url: '/api/data/fetch', method: 'POST', data: payload, timeout: 60000 }),
 
   agentChat: (message) => request({ url: '/api/agent/chat-sync', method: 'POST', data: { message, session_id: getSessionId() }, timeout: 60000 }),
+
+  // 用户认证
+  register: (payload) => request({ url: '/api/auth/register', method: 'POST', data: payload, auth: false }),
+  login: (payload) => request({ url: '/api/auth/login', method: 'POST', data: payload, auth: false }),
+  me: () => request({ url: '/api/auth/me' }),
+
+  // 登录用户的选号记录
+  savePick: (payload) => request({ url: '/api/picks/save', method: 'POST', data: payload }),
+  myPicks: (limit = 20) => request({ url: `/api/picks/mine?limit=${limit}` }),
 }

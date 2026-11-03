@@ -18,6 +18,10 @@ class Settings(BaseSettings):
     # 跨域白名单（H5 / uni-app 开发服务器）
     cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
 
+    # 用户认证：JWT 签名密钥（生产环境必须用强随机值覆盖，≥32 字节）
+    secret_key: str = "dev-secret-change-me-in-production-0123456789"
+    token_expire_minutes: int = 10080   # 默认 7 天
+
     # Agent 编排层：OpenAI 兼容 Chat Completions 接口
     llm_api_base: str = "https://api.openai.com/v1"
     llm_api_key: str = ""
