@@ -48,7 +48,7 @@ async def login(req: UserCreate) -> TokenOut:
     async with db.get_session_factory()() as session:
         row = (
             await session.execute(select(models.users).where(models.users.c.username == req.username.strip()))
-        ).scalar_one_or_none()
+        ).one_or_none()
     if row is None or not verify_password(req.password, row.password_hash):
         raise HTTPException(401, "用户名或密码错误")
     return TokenOut(access_token=create_access_token(row.id), user=_user_out(row))

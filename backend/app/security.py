@@ -66,7 +66,7 @@ async def get_current_user(
     async with db.get_session_factory()() as session:
         row = (
             await session.execute(select(models.users).where(models.users.c.id == user_id))
-        ).scalar_one_or_none()
+        ).one_or_none()
     if row is None:
         raise HTTPException(401, "用户不存在，请重新登录")
     return row
