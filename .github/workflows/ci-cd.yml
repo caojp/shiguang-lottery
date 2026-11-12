@@ -107,6 +107,9 @@ jobs:
     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     environment: production
+    permissions:
+      contents: read
+      packages: read
     steps:
       - uses: actions/checkout@v4
 
@@ -146,13 +149,14 @@ jobs:
           DEPLOY_PATH: ${{ vars.DEPLOY_PATH || '/opt/shiguang/deploy' }}
           GHCR_USER: ${{ secrets.GHCR_USER || github.actor }}
           GHCR_PAT: ${{ secrets.GHCR_PAT }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           HEALTH_URL: ${{ vars.HEALTH_URL || 'http://127.0.0.1:8080/api/health' }}
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           port: ${{ secrets.SERVER_PORT || 22 }}
-          envs: BACKEND_IMAGE,FRONTEND_IMAGE,DEPLOY_PATH,GHCR_USER,GHCR_PAT,HEALTH_URL
+          envs: BACKEND_IMAGE,FRONTEND_IMAGE,DEPLOY_PATH,GHCR_USER,GHCR_PAT,GHCR_TOKEN,HEALTH_URL
           script: |
             set -euo pipefail
             cd "$DEPLOY_PATH"
@@ -162,9 +166,14 @@ jobs:
               exit 1
             fi
 
-            # 私有 GHCR 包才需要 PAT；公开包可跳过
+            # 私有 GHCR 包需要凭据：优先专用 PAT，未配置时回退到本次运行的 GITHUB_TOKEN
             if [ -n "${GHCR_PAT:-}" ]; then
               echo "$GHCR_PAT" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
+            elif [ -n "${GHCR_TOKEN:-}" ]; then
+              echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
+            else
+              echo "缺少 GHCR 凭据：请配置 GHCR_PAT 或将镜像包设为 public"
+              exit 1
             fi
 
             export BACKEND_IMAGE FRONTEND_IMAGE
