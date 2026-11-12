@@ -134,7 +134,31 @@ python scripts/verify_history.py --pages 1            # 每彩种把官方接口
 python scripts/fetch_history.py --check-gaps          # 期号连续性检查
 ```
 
-`source` 字段区分来源：`official`（官方接口，可核对）/ `demo`（随机演示，仅界面展示）/ `manual`（手工导入）。
+`source` 字段区分来源：`official`（官方接口，可核对）/ `demo`（随机演示，仅界面展示）/ `manual`（手工导入，用于跨环境搬运）。
+
+启动引导与每日 21:35 定时任务均改为调用官方接口；拉取失败只记录告警日志，**不会写入随机数据**。
+
+### 部署服务器无法直连官网时
+
+机房出口 IP 可能被官方 WAF 拦截（现象：福彩接口返回 403，体彩接口返回 567）。此时在能直连的机器上拉取并导出 CSV，再搬到服务器导入：
+
+```bash
+# ① 可直连的机器（backend/ 目录）
+python scripts/fetch_history.py --purge-demo --pages 3
+python scripts/verify_history.py --pages 1
+python scripts/export_history.py                    # 输出 data/history_official.csv
+
+# ② 服务器
+scp data/history_official.csv root@服务器:/tmp/history_official.csv
+docker cp /tmp/history_official.csv shiguang-backend:/tmp/history_official.csv
+cd /opt/shiguang/deploy
+docker compose -f docker-compose.prod.yml exec -T backend \
+    python scripts/import_history.py --csv /tmp/history_official.csv
+docker compose -f docker-compose.prod.yml exec -T backend \
+    python scripts/fetch_history.py --check-gaps
+```
+
+导入是幂等的（`UNIQUE(game_code, issue)` + `ON CONFLICT DO UPDATE`），可重复执行；`source` 列原样保留为 `official`。
 
 ## 运行测试
 

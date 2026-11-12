@@ -22,6 +22,8 @@ frontend/unpackage/
 *.tar.gz
 backend/uvicorn_log.txt
 backend/*_log.txt
+data/history_official.csv
+data/*.csv
 .idea/
 .vscode/
 .DS_Store

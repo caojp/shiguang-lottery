@@ -169,3 +169,41 @@ async def purge_demo(games: list[str]) -> int:
         )
         await session.commit()
         return res.rowcount or 0
+
+
+async def import_rows(rows: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
+    """把外部来源（CSV 导出）的开奖记录按彩种幂等写入，返回各彩种汇总。
+
+    rows 每项字段：game_code / issue / draw_date / numbers_json / source。
+    用于部署环境无法直连官方接口时（机房出口被官网 WAF 拦截），
+    在可直连的机器上 `scripts/export_history.py` 导出后在服务器 `scripts/import_history.py` 导入。
+    """
+    db.init_engine()
+    by_game: dict[str, list[dict[str, Any]]] = {}
+    for row in rows:
+        by_game.setdefault(row["game_code"], []).append(row)
+
+    summary: dict[str, dict[str, Any]] = {}
+    for code, items in by_game.items():
+        stmt = pg_insert(draw_history).values(items)
+        stmt = stmt.on_conflict_do_update(
+            constraint="uq_draw_history_game_issue",
+            set_={
+                "draw_date": stmt.excluded.draw_date,
+                "numbers_json": stmt.excluded.numbers_json,
+                "source": stmt.excluded.source,
+            },
+        )
+        async with db.get_session_factory()() as session:
+            await session.execute(stmt)
+            await session.commit()
+
+        issues = sorted(str(i["issue"]) for i in items)
+        g = GAMES.get(code)
+        summary[code] = {
+            "name": g.name if g else code,
+            "added": len(items),
+            "first_issue": issues[0],
+            "last_issue": issues[-1],
+        }
+    return summary
