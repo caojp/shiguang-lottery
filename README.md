@@ -70,9 +70,10 @@ pip install -r requirements.txt
 # 3. 迁移建表
 alembic upgrade head
 
-# 4. 生成演示历史数据（幂等，可重复执行）
-python scripts/fetch_history.py --seed-demo --demo-periods 60
-python scripts/fetch_history.py --check-gaps   # 检查期号缺口
+# 4. 拉取官方真实开奖数据（幂等，可重复执行；--purge-demo 顺带清除演示数据）
+python scripts/fetch_history.py --purge-demo --pages 3
+python scripts/fetch_history.py --check-gaps         # 检查期号缺口
+python scripts/verify_history.py                     # 库内数据与官方接口逐期核对
 
 # 5. 启动 API（默认 http://127.0.0.1:8000）
 uvicorn app.main:app --reload --port 8000
@@ -112,9 +113,28 @@ npm run build:h5
 | POST | /api/backtests/run | 策略回测（历史命中 + 基线对照，写入 backtest_reports） |
 | GET | /api/backtests/reports | 回测历史 |
 | GET | /api/analysis/hot-cold | 冷热号统计 |
-| GET | /api/data/status | 数据源状态 + 期号缺口（窗口函数 LAG） |
+| GET | /api/data/status | 数据源状态 + 期号缺口（窗口函数 LAG，兼容福彩 7 位 / 体彩 5 位期号） |
+| GET | /api/data/history | 最近 N 期开奖（真实官方数据） |
+| POST | /api/data/fetch | 官方接口拉取入库（默认 3 页 × 30 期，可 purge 演示数据） |
+| POST | /api/data/seed-demo | 无网络时的界面演示数据（随机生成，不可核对） |
 | POST | /api/agent/chat | Agent 对话（SSE 流式） |
 | POST | /api/agent/chat-sync | Agent 对话（非流式，小程序端用） |
+
+## 数据来源与核对
+
+| 彩种 | 官方接口 | 期号格式 |
+| --- | --- | --- |
+| 双色球 / 福彩3D / 快乐8 / 七乐彩 | `cwl.gov.cn` findDrawNotice（name=ssq / 3d / kl8 / qlc） | 7 位，如 2026129 |
+| 超级大乐透 / 排列3 / 排列5 | `webapi.sporttery.cn` getHistoryPageListV1（gameNo=85 / 35 / 350133） | 5 位，如 26129 |
+
+期号与号码保持官网原样，可与实体彩票店逐期核对。核对方式：
+
+```bash
+python scripts/verify_history.py --pages 1            # 每彩种把官方接口当前返回与库内逐字段比对
+python scripts/fetch_history.py --check-gaps          # 期号连续性检查
+```
+
+`source` 字段区分来源：`official`（官方接口，可核对）/ `demo`（随机演示，仅界面展示）/ `manual`（手工导入）。
 
 ## 运行测试
 
@@ -133,7 +153,8 @@ $env:RUN_DB_TESTS=1; python -m pytest tests/test_integration.py -v
 
 ## 已知边界
 
-- **真实官网数据拉取**：`fetch_history.py` 已实现幂等入库与期号检查；真实抓取为扩展点（官网接口会改版），默认用 `--seed-demo` 生成演示历史。
+- **官方接口稳定性**：数据来自中国福彩网 / 中国体彩网公开接口，已实测可用并逐期核对；若官方改版，接口参数在 `backend/app/services/official_fetcher.py` 集中维护（福彩 name、体彩 gameNo）。
+- **模拟开奖 ≠ 真实开奖**：选号页「模拟开奖」按彩种规则随机摇号，用于体验概率，不对标任何真实期号；真实历史数据见「数据」页。
 - **竞彩**：依赖真实赛果，本期未开放。
 - **Agent 层**：未配置 LLM key 时用内置关键词路由（选号/冷热/规则/回测），配置后走 function calling。
 - **前端图表**：为跨端（H5/小程序）零依赖，走势与热力图用 CSS 实现；如需高级图表可在 H5 端引入 ECharts。

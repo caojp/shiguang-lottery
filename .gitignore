@@ -20,6 +20,8 @@ frontend/unpackage/
 
 # 构建与部署产物
 *.tar.gz
+backend/uvicorn_log.txt
+backend/*_log.txt
 .idea/
 .vscode/
 .DS_Store

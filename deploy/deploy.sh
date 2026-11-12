@@ -24,8 +24,10 @@ docker compose -f docker-compose.prod.yml up -d
 echo "==> [4/6] 数据库迁移（backend 启动命令已自动执行，此处兜底）"
 docker compose -f docker-compose.prod.yml exec -T backend alembic upgrade head || true
 
-echo "==> [5/6] 写入演示历史数据（幂等，可重复执行）"
-docker compose -f docker-compose.prod.yml exec -T backend python scripts/fetch_history.py --seed-demo --demo-periods 60 || true
+echo "==> [5/6] 拉取官方真实开奖数据（幂等，可重复执行；--purge-demo 清除历史演示数据）"
+docker compose -f docker-compose.prod.yml exec -T backend python scripts/fetch_history.py --purge-demo --pages 3 || true
+docker compose -f docker-compose.prod.yml exec -T backend python scripts/fetch_history.py --check-gaps || true
+docker compose -f docker-compose.prod.yml exec -T backend python scripts/verify_history.py --pages 1 || true
 
 echo "==> [6/6] 健康检查"
 sleep 8

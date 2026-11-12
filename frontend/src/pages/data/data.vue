@@ -9,18 +9,19 @@
         </view>
         <view class="title-r">
           <view @click.stop>
-            <tip-dot text="历史开奖由后端幂等写入 PostgreSQL（同期限号自动覆盖）并记录来源；展开后可点击「立即拉取」手动补数" />
+            <tip-dot text="历史开奖来自中国福彩网 / 中国体彩网官方接口，期号与号码保持官网原样，可与实体彩票店逐期核对；系统幂等写入 PostgreSQL（同期限号自动覆盖）并记录来源" />
           </view>
           <text class="chev" :class="{ open: srcOpen }">⌄</text>
         </view>
       </view>
 
       <block v-if="srcOpen">
+        <view v-if="hasDemo" class="demo-warn">当前存在演示数据（随机生成，与实体开奖无关），点击下方「立即拉取」替换为官方真实数据</view>
         <view class="rowline">
           <view class="l-wrap">
-            <text class="row-name">自动同步</text>
+            <text class="row-name">数据来源</text>
           </view>
-          <text class="r">每日 21:35 · 开奖后</text>
+          <text class="r">中国福彩网 / 中国体彩网</text>
         </view>
         <view v-if="loading" class="empty">加载中…</view>
         <view v-for="d in status" :key="d.game_code" class="rowline">
@@ -36,7 +37,7 @@
         <view class="btn-blue fetch-btn" :class="{ loading: fetching }" @click="runFetch">
           {{ fetching ? '拉取中…' : '立即拉取' }}
         </view>
-        <text class="fetch-note">系统每日自动同步，此按钮仅用于手动补拉</text>
+        <text class="fetch-note">建议开奖后手动拉取一次；也可用 scripts/fetch_history.py 配合系统计划任务做每日同步</text>
       </block>
     </view>
 
@@ -131,6 +132,9 @@ export default {
     histGame() {
       return this.games.find((g) => g.code === this.histCode) || null
     },
+    hasDemo() {
+      return this.status.some((d) => d.source === 'demo')
+    },
   },
   onLoad() {
     this.load()
@@ -186,16 +190,23 @@ export default {
       return 'red'
     },
     sourceName(s) {
-      return s === 'demo' ? '演示' : s === 'official' ? '官方' : '手动'
+      if (s === 'demo') return '演示·不可核对'
+      if (s === 'official') return '官方'
+      return '手动'
     },
-    // 移动端直接触发后端入库：按钮内联 loading，完成后刷新状态与最近开奖
+    // 移动端直接触发后端官方接口拉取：按钮内联 loading，完成后刷新状态与最近开奖
     async runFetch() {
       if (this.fetching) return
       this.fetching = true
       try {
-        const res = await api.fetchData({ periods: 30 })
+        const res = await api.fetchData({ pages: 3 })
+        const ok = res.games_succeeded !== undefined ? `${res.games_succeeded}/${res.games_total} 彩种` : ''
         uni.showToast({
-          title: res.updated ? `已更新 ${res.updated} 期` : '数据已是最新',
+          title: res.updated
+            ? `已更新 ${res.updated} 期${ok ? `（${ok}）` : ''}`
+            : res.updated === 0 && ok
+              ? `拉取完成（${ok}）`
+              : '数据已是最新',
           icon: 'none',
         })
         await Promise.all([this.load(), this.loadHistory()])
@@ -349,6 +360,15 @@ export default {
 .btn-blue.loading {
   opacity: 0.6;
   pointer-events: none;
+}
+.demo-warn {
+  font-size: 22rpx;
+  line-height: 1.6;
+  color: #AD6800;
+  background: #FFF7E6;
+  padding: 14rpx 20rpx;
+  border-radius: 16rpx;
+  margin-top: 16rpx;
 }
 .fetch-note {
   display: block;

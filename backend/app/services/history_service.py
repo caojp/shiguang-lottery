@@ -1,20 +1,23 @@
-"""历史开奖入库服务：演示数据生成与幂等写入，供脚本和在线接口共用。
+"""历史开奖入库服务：官方数据拉取与演示数据生成，供脚本和在线接口共用。
 
-- 命令行：backend/scripts/fetch_history.py --seed-demo
-- 移动端：POST /api/data/fetch（由数据页“立即拉取”按钮触发）
+- 官方数据：fetch_history.py --source official / POST /api/data/fetch
+- 演示数据：fetch_history.py --seed-demo（仅用于无网络环境的界面演示，source='demo'）
+- 清理演示数据：fetch_history.py --purge-demo / purge_demo()
 """
 from __future__ import annotations
 
+import asyncio
 import random
 from datetime import date, timedelta
 from typing import Any
 
-from sqlalchemy import func, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 
 from .. import db
 from ..engine.config import GAMES
 from ..models import draw_history
+from .official_fetcher import fetch_game
 
 
 def demo_numbers(game_code: str, rng: random.Random) -> dict[str, Any]:
@@ -94,3 +97,75 @@ async def seed_demo(games: list[str], periods: int) -> dict[str, dict[str, Any]]
             }
 
     return summary
+
+
+async def import_official(
+    games: list[str], pages: int = 1, page_size: int = 30
+) -> dict[str, dict[str, Any]]:
+    """从官方接口拉取真实历史开奖并幂等入库（source='official'）。
+
+    抓取为同步 HTTP，用 to_thread 包裹避免阻塞事件循环。
+    每个彩种先在线程内完成抓取，再用独立的短会话写入，避免长阻塞期间持有
+    asyncpg 连接（Windows 事件循环下易触发连接失效）。
+    期号保持官网原样：福彩 7 位（2026129），体彩 5 位（26129）。
+    """
+    db.init_engine()
+    summary: dict[str, dict[str, Any]] = {}
+
+    for code in games:
+        g = GAMES[code]
+        try:
+            recs = await asyncio.to_thread(fetch_game, code, pages, page_size)
+        except Exception as e:  # noqa: BLE001 - 单彩种失败不影响其他彩种
+            summary[code] = {"name": g.name, "added": 0, "error": f"{type(e).__name__}: {e}"}
+            continue
+        if not recs:
+            summary[code] = {"name": g.name, "added": 0, "error": "官方接口未返回数据"}
+            continue
+
+        rows = [
+            {
+                "game_code": code,
+                "issue": r.issue,
+                "draw_date": r.draw_date,
+                "numbers_json": r.numbers,
+                "source": r.source,
+            }
+            for r in recs
+        ]
+        stmt = pg_insert(draw_history).values(rows)
+        stmt = stmt.on_conflict_do_update(
+            constraint="uq_draw_history_game_issue",
+            set_={
+                "draw_date": stmt.excluded.draw_date,
+                "numbers_json": stmt.excluded.numbers_json,
+                "source": stmt.excluded.source,
+            },
+        )
+        async with db.get_session_factory()() as session:
+            await session.execute(stmt)
+            await session.commit()
+
+        issues = sorted(r.issue for r in recs)
+        summary[code] = {
+            "name": g.name,
+            "added": len(rows),
+            "first_issue": issues[0],
+            "last_issue": issues[-1],
+        }
+
+    return summary
+
+
+async def purge_demo(games: list[str]) -> int:
+    """删除演示数据（source='demo'），返回删除行数。"""
+    db.init_engine()
+    async with db.get_session_factory()() as session:
+        res = await session.execute(
+            delete(draw_history).where(
+                draw_history.c.game_code.in_(games),
+                draw_history.c.source == "demo",
+            )
+        )
+        await session.commit()
+        return res.rowcount or 0
